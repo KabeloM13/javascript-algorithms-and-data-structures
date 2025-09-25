@@ -1,0 +1,83 @@
+** start of index.html **
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Telephone Number Validator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 40px;
+    }
+    input {
+      padding: 8px;
+      width: 250px;
+    }
+    button {
+      padding: 8px 15px;
+      margin: 5px;
+      cursor: pointer;
+    }
+    #results-div {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>Telephone Number Validator</h1>
+  <input id="user-input" type="text" placeholder="Enter US phone number">
+  <br>
+  <button id="check-btn">Check</button>
+  <button id="clear-btn">Clear</button>
+  <p id="results-div"></p>
+
+  <script>
+    const input = document.getElementById("user-input");
+    const checkBtn = document.getElementById("check-btn");
+    const clearBtn = document.getElementById("clear-btn");
+    const resultsDiv = document.getElementById("results-div");
+
+    // Regex to validate US phone numbers
+    const validPhone = /^(1\s?)?(\(\d{3}\)|\d{3})([\s-]?)\d{3}([\s-]?)\d{4}$/;
+
+    checkBtn.addEventListener("click", () => {
+      const value = input.value.trim();
+
+      if (!value) {
+        alert("Please provide a phone number");
+        return;
+      }
+
+      if (validPhone.test(value)) {
+        resultsDiv.textContent = `Valid US number: ${value}`;
+      } else {
+        resultsDiv.textContent = `Invalid US number: ${value}`;
+      }
+    });
+
+    clearBtn.addEventListener("click", () => {
+      resultsDiv.textContent = "";
+      input.value = "";
+    });
+  </script>
+</body>
+</html>
+
+
+** end of index.html **
+
+** start of styles.css **
+
+
+
+** end of styles.css **
+
+** start of script.js **
+
+
+
+** end of script.js **
+

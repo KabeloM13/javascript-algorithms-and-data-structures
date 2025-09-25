@@ -1,0 +1,96 @@
+** start of index.html **
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Roman Numeral Converter</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 2rem;
+    }
+    input, button {
+      padding: 0.5rem;
+      font-size: 1rem;
+      margin: 0.5rem;
+    }
+    #output {
+      margin-top: 1rem;
+      font-weight: bold;
+      font-size: 1.5rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>Roman Numeral Converter</h1>
+  <input type="number" id="number" placeholder="Enter a number" />
+  <button id="convert-btn">Convert</button>
+  <div id="output"></div>
+
+  <script>
+    const numberInput = document.getElementById('number');
+    const convertBtn = document.getElementById('convert-btn');
+    const output = document.getElementById('output');
+
+    const romanMap = [
+      { value: 1000, numeral: "M" },
+      { value: 900, numeral: "CM" },
+      { value: 500, numeral: "D" },
+      { value: 400, numeral: "CD" },
+      { value: 100, numeral: "C" },
+      { value: 90, numeral: "XC" },
+      { value: 50, numeral: "L" },
+      { value: 40, numeral: "XL" },
+      { value: 10, numeral: "X" },
+      { value: 9, numeral: "IX" },
+      { value: 5, numeral: "V" },
+      { value: 4, numeral: "IV" },
+      { value: 1, numeral: "I" }
+    ];
+
+    function convertToRoman(num) {
+      let result = "";
+      for (let i = 0; i < romanMap.length; i++) {
+        while (num >= romanMap[i].value) {
+          result += romanMap[i].numeral;
+          num -= romanMap[i].value;
+        }
+      }
+      return result;
+    }
+
+    convertBtn.addEventListener('click', () => {
+      const num = Number(numberInput.value);
+
+      if (!numberInput.value) {
+        output.textContent = "Please enter a valid number";
+      } else if (num < 1) {
+        output.textContent = "Please enter a number greater than or equal to 1";
+      } else if (num > 3999) {
+        output.textContent = "Please enter a number less than or equal to 3999";
+      } else {
+        output.textContent = convertToRoman(num);
+      }
+    });
+  </script>
+</body>
+</html>
+
+
+** end of index.html **
+
+** start of styles.css **
+
+
+
+** end of styles.css **
+
+** start of script.js **
+
+
+
+** end of script.js **
+

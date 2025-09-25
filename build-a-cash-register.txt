@@ -1,0 +1,156 @@
+** start of index.html **
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Cash Register</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 40px;
+    }
+    input {
+      padding: 8px;
+      width: 120px;
+      margin: 5px;
+    }
+    button {
+      padding: 8px 15px;
+      margin: 5px;
+      cursor: pointer;
+    }
+    #change-due {
+      margin-top: 20px;
+      font-weight: bold;
+      white-space: pre-line;
+    }
+  </style>
+</head>
+<body>
+  <h1>Cash Register</h1>
+  <input id="cash" type="number" step="0.01" placeholder="Enter cash">
+  <br>
+  <button id="purchase-btn">Purchase</button>
+  <p id="change-due"></p>
+
+  <!-- ✅ Link to external JS file -->
+  <script src="script.js"></script>
+</body>
+</html>
+
+
+** end of index.html **
+
+** start of styles.css **
+
+
+
+** end of styles.css **
+
+** start of script.js **
+
+// Global variables required by FCC
+let price = 19.5;
+let cid = [
+  ["PENNY", 1.01],
+  ["NICKEL", 2.05],
+  ["DIME", 3.1],
+  ["QUARTER", 4.25],
+  ["ONE", 90],
+  ["FIVE", 55],
+  ["TEN", 20],
+  ["TWENTY", 60],
+  ["ONE HUNDRED", 100]
+];
+
+const cashInput = document.getElementById("cash");
+const purchaseBtn = document.getElementById("purchase-btn");
+const changeDiv = document.getElementById("change-due");
+
+const currencyUnits = [
+  ["ONE HUNDRED", 100],
+  ["TWENTY", 20],
+  ["TEN", 10],
+  ["FIVE", 5],
+  ["ONE", 1],
+  ["QUARTER", 0.25],
+  ["DIME", 0.1],
+  ["NICKEL", 0.05],
+  ["PENNY", 0.01]
+];
+
+function checkCashRegister(price, cash, cid) {
+  let changeDue = parseFloat((cash - price).toFixed(2));
+  let totalCID = parseFloat(
+    cid.reduce((sum, curr) => sum + curr[1], 0).toFixed(2)
+  );
+
+  if (cash < price) {
+    alert("Customer does not have enough money to purchase the item");
+    return;
+  }
+
+  if (cash === price) {
+    changeDiv.textContent =
+      "No change due - customer paid with exact cash";
+    return;
+  }
+
+  if (totalCID < changeDue) {
+    changeDiv.textContent = "Status: INSUFFICIENT_FUNDS";
+    return;
+  }
+
+  if (totalCID === changeDue) {
+    let closedChange = cid
+      .filter(unit => unit[1] > 0)
+      .reverse()
+      .map(unit => `${unit[0]}: $${unit[1]}`)
+      .join(" ");
+    changeDiv.textContent = `Status: CLOSED ${closedChange}`;
+    return;
+  }
+
+  let changeArr = [];
+  let cidCopy = [...cid].reverse();
+
+  for (let i = 0; i < currencyUnits.length; i++) {
+    let coinName = currencyUnits[i][0];
+    let coinValue = currencyUnits[i][1];
+    let coinTotal = cidCopy[i][1];
+    let coinCount = (coinTotal / coinValue).toFixed(0);
+    let amountToReturn = 0;
+
+    while (changeDue >= coinValue && coinCount > 0) {
+      changeDue = parseFloat((changeDue - coinValue).toFixed(2));
+      coinCount--;
+      amountToReturn += coinValue;
+    }
+
+    if (amountToReturn > 0) {
+      changeArr.push([coinName, amountToReturn]);
+    }
+  }
+
+  if (changeDue > 0) {
+    changeDiv.textContent = "Status: INSUFFICIENT_FUNDS";
+    return;
+  }
+
+  let changeString = changeArr
+    .map(unit => `${unit[0]}: $${unit[1].toFixed(2).replace(/\.00$/, "")}`)
+    .join(" ");
+
+  changeDiv.textContent = `Status: OPEN ${changeString}`;
+}
+
+purchaseBtn.addEventListener("click", () => {
+  let cash = parseFloat(cashInput.value);
+  checkCashRegister(price, cash, cid);
+});
+
+
+** end of script.js **
+

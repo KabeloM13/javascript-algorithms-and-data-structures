@@ -1,0 +1,259 @@
+** start of index.html **
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>RPG Creature Search</title>
+  <style>
+    body { font-family: system-ui, Arial; background:#0f1724; color:#e6eef8; display:flex; align-items:flex-start; justify-content:center; padding:32px; }
+    .card { width:720px; background: linear-gradient(180deg,#071028 0%, #081225 100%); border-radius:12px; box-shadow: 0 8px 30px rgba(2,6,23,.6); padding:20px; }
+    .search { display:flex; gap:8px; margin-bottom:16px; }
+    #search-input { flex:1; padding:10px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:rgba(255,255,255,0.02); color:inherit; }
+    #search-button { padding:10px 18px; border-radius:8px; border:none; cursor:pointer; background:#1e3a8a; color:#fff; }
+    .grid { display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
+    .panel { background:rgba(255,255,255,0.02); padding:12px; border-radius:8px; }
+    h1 { margin:0 0 8px 0; font-size:18px; }
+    .types > div { display:inline-block; margin:4px 6px 0 0; padding:6px 10px; border-radius:999px; background:rgba(255,255,255,0.03); font-weight:600; font-size:12px; }
+    .stat { display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px dashed rgba(255,255,255,0.03); }
+    .stat:last-child { border-bottom:none; }
+    .label { color: #9fb0cc; }
+  </style>
+</head>
+<body>
+  <main class="card" role="main" aria-labelledby="app-title">
+    <h1 id="app-title">RPG Creature Search</h1>
+
+    <!-- Step 1: search input (required) -->
+    <div class="search">
+      <input id="search-input" type="text" required placeholder="Enter creature name or ID (e.g. Pyrolynx or 2)" />
+      <!-- Step 2: search button -->
+      <button id="search-button" type="button">Search</button>
+    </div>
+
+    <div class="grid" aria-live="polite">
+      <div class="panel">
+        <strong id="creature-name"></strong>
+        <div id="creature-id" class="label" style="margin-top:6px;"></div>
+        <div style="margin-top:12px;">
+          <div id="weight" class="label"></div>
+          <div id="height" class="label"></div>
+        </div>
+
+        <div style="margin-top:12px;">
+          <div class="label">Types</div>
+          <!-- Step 7: types -->
+          <div id="types" class="types" aria-live="polite"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="label" style="margin-bottom:8px">Stats</div>
+        <div class="stat"><div class="label">HP</div><div id="hp"></div></div>
+        <div class="stat"><div class="label">Attack</div><div id="attack"></div></div>
+        <div class="stat"><div class="label">Defense</div><div id="defense"></div></div>
+        <div class="stat"><div class="label">Special Attack</div><div id="special-attack"></div></div>
+        <div class="stat"><div class="label">Special Defense</div><div id="special-defense"></div></div>
+        <div class="stat"><div class="label">Speed</div><div id="speed"></div></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- All app logic inline (first 13 steps + remaining logic) -->
+  <script>
+    // Base URL (use the API endpoint exactly as documented)
+    const API_BASE = 'https://rpg-creature-api.freecodecamp.rocks';
+
+    // DOM refs required by the tests
+    const searchInput = document.getElementById('search-input');
+    const searchButton = document.getElementById('search-button');
+
+    const nameEl = document.getElementById('creature-name');
+    const idEl = document.getElementById('creature-id');
+    const weightEl = document.getElementById('weight');
+    const heightEl = document.getElementById('height');
+    const typesEl = document.getElementById('types');
+
+    const hpEl = document.getElementById('hp');
+    const attackEl = document.getElementById('attack');
+    const defenseEl = document.getElementById('defense');
+    const spAtkEl = document.getElementById('special-attack');
+    const spDefEl = document.getElementById('special-defense');
+    const speedEl = document.getElementById('speed');
+
+    // Helper to safely read stats from a variety of possible shapes
+    function getStat(data, statName) {
+      if (!data) return '';
+      // direct property
+      if (data[statName] !== undefined) return data[statName];
+      // data.stats as object: { hp: 65, ... }
+      if (data.stats && typeof data.stats === 'object' && !Array.isArray(data.stats)) {
+        if (data.stats[statName] !== undefined) return data.stats[statName];
+      }
+      // data.stats as array: [{ name: 'hp', value: 65 }, ...]
+      if (Array.isArray(data.stats)) {
+        const s = data.stats.find(x => x.name === statName || (x.stat && (x.stat.name === statName || x.stat === statName)));
+        if (s) return s.value || s.base_stat || s.base || s.stat_value || s.stat;
+      }
+      // base_stats or other naming variants
+      if (data.base_stats && data.base_stats[statName] !== undefined) return data.base_stats[statName];
+      const alias = { 'attack':'atk','defense':'def','special-attack':'special_attack','special-defense':'special_defense' };
+      if (alias[statName] && data[alias[statName]] !== undefined) return data[alias[statName]];
+      return '';
+    }
+
+    // Clear UI helper
+    function clearUI() {
+      typesEl.innerHTML = '';
+      nameEl.textContent = '';
+      idEl.textContent = '';
+      weightEl.textContent = '';
+      heightEl.textContent = '';
+      hpEl.textContent = '';
+      attackEl.textContent = '';
+      defenseEl.textContent = '';
+      spAtkEl.textContent = '';
+      spDefEl.textContent = '';
+      speedEl.textContent = '';
+    }
+
+    // Main search function
+    function performSearch() {
+      const raw = searchInput.value.trim();
+      if (!raw) return; // input is required, but guard anyway
+
+      const query = encodeURIComponent(raw.toLowerCase());
+      const url = `${API_BASE}/api/creature/${query}`;
+
+      // Fetch creature data from the documented endpoint
+      fetch(url)
+        .then(response => {
+          // if creature doesn't exist, API will return not-ok
+          if (!response.ok) {
+            throw new Error('Creature not found');
+          }
+          return response.json();
+        })
+        .then(data => {
+          // Clear previous UI
+          typesEl.innerHTML = '';
+
+          // Name: tests expect uppercase (they accept PYROLYNX)
+          if (data.name) {
+            nameEl.textContent = String(data.name).toUpperCase();
+          } else {
+            nameEl.textContent = '';
+          }
+
+          // ID: put a # prefix (tests accept "#1" or "1")
+          const idVal = data.id || data._id || data.number || '';
+          idEl.textContent = idVal ? `#${idVal}` : '';
+
+          // Weight & Height: provide "Weight: X" "Height: Y" to satisfy test options
+          if (data.weight !== undefined) weightEl.textContent = `Weight: ${data.weight}`;
+          else if (data.weightKg !== undefined) weightEl.textContent = `Weight: ${data.weightKg}`;
+          else weightEl.textContent = '';
+
+          if (data.height !== undefined) heightEl.textContent = `Height: ${data.height}`;
+          else if (data.heightCm !== undefined) heightEl.textContent = `Height: ${data.heightCm}`;
+          else heightEl.textContent = '';
+
+          // Types: clear first, then add one element per type in UPPERCASE
+          const types = data.types || data.type || [];
+          if (Array.isArray(types)) {
+            types.forEach(t => {
+              const typeName = (typeof t === 'string') ? t : (t.name || t.type || (t.slot && t.type && t.type.name));
+              if (typeName) {
+                const el = document.createElement('div');
+                el.textContent = String(typeName).toUpperCase();
+                typesEl.appendChild(el);
+              }
+            });
+          } else if (typeof types === 'string' && types.length) {
+            const el = document.createElement('div');
+            el.textContent = types.toUpperCase();
+            typesEl.appendChild(el);
+          }
+
+          // Stats (robust access)
+          hpEl.textContent = getStat(data, 'hp') || '';
+          attackEl.textContent = getStat(data, 'attack') || '';
+          defenseEl.textContent = getStat(data, 'defense') || '';
+          spAtkEl.textContent = getStat(data, 'special-attack') || getStat(data, 'specialAttack') || '';
+          spDefEl.textContent = getStat(data, 'special-defense') || getStat(data, 'specialDefense') || '';
+          speedEl.textContent = getStat(data, 'speed') || '';
+        })
+        .catch(() => {
+          // Clear UI and show alert exactly as tests expect
+          clearUI();
+          alert('Creature not found');
+        });
+    }
+
+    // Wire UI
+    searchButton.addEventListener('click', performSearch);
+    // allow Enter key to trigger search
+    searchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        performSearch();
+      }
+    });
+  </script>
+</body>
+</html>
+
+
+
+** end of index.html **
+
+** start of script.js **
+
+document.getElementById("search-button").addEventListener("click", async () => {
+  const query = document.getElementById("search-input").value.trim();
+  if (!query) return;
+
+  const url = `https://rpg-creature-api.freecodecamp.rocks/creature/${query}`;
+
+  try {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error("Creature not found");
+
+    const data = await response.json();
+
+    // Fill the UI with correct data
+    document.getElementById("creature-name").textContent = data.name.toUpperCase();
+    document.getElementById("creature-id").textContent = `#${data.id}`;
+    document.getElementById("weight").textContent = `Weight: ${data.weight}`;
+    document.getElementById("height").textContent = `Height: ${data.height}`;
+    document.getElementById("hp").textContent = data.hp;
+    document.getElementById("attack").textContent = data.attack;
+    document.getElementById("defense").textContent = data.defense;
+    document.getElementById("special-attack").textContent = data.special_attack;
+    document.getElementById("special-defense").textContent = data.special_defense;
+    document.getElementById("speed").textContent = data.speed;
+
+    // Clear and update types
+    const typesContainer = document.getElementById("types");
+    typesContainer.innerHTML = "";
+    data.types.forEach(type => {
+      const span = document.createElement("span");
+      span.textContent = type.toUpperCase();
+      typesContainer.appendChild(span);
+    });
+
+  } catch {
+    alert("Creature not found");
+  }
+});
+
+
+** end of script.js **
+
+** start of styles.css **
+
+
+
+** end of styles.css **
+

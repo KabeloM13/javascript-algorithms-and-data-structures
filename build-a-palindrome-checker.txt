@@ -1,0 +1,99 @@
+** start of index.html **
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Palindrome Checker</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      padding: 2rem;
+      text-align: center;
+    }
+    #app {
+      background: #fff;
+      padding: 2rem;
+      border-radius: 10px;
+      max-width: 500px;
+      margin: 0 auto;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    input {
+      padding: 10px;
+      width: 70%;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      margin-bottom: 1rem;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 1rem;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-left: 10px;
+    }
+    #result {
+      margin-top: 1rem;
+      font-weight: bold;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <h1>Palindrome Checker</h1>
+    <input type="text" id="text-input" placeholder="Enter text to check" />
+    <button id="check-btn">Check</button>
+    <p id="result"></p>
+  </div>
+
+  <script>
+    const input = document.getElementById("text-input");
+    const checkBtn = document.getElementById("check-btn");
+    const result = document.getElementById("result");
+
+    checkBtn.addEventListener("click", function () {
+      const userInput = input.value;
+
+      if (!userInput.trim()) {
+        alert("Please input a value.");
+        return;
+      }
+
+      const cleaned = userInput
+        .replace(/[^a-z0-9]/gi, "")
+        .toLowerCase();
+
+      const reversed = cleaned.split("").reverse().join("");
+
+      if (cleaned === reversed) {
+        result.textContent = `${userInput} is a palindrome.`;
+      } else {
+        result.textContent = `${userInput} is not a palindrome.`;
+      }
+    });
+  </script>
+</body>
+</html>
+
+
+** end of index.html **
+
+** start of styles.css **
+
+
+
+** end of styles.css **
+
+** start of script.js **
+
+
+
+** end of script.js **
+
