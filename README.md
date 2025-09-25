@@ -1,4 +1,4 @@
-# JavaScript Algorithms and Data Structures (Beta) - freeCodeCamp
+# JavaScript Algorithms and Data Structures Certification (Beta) - freeCodeCamp
 
 This repository contains all my projects for the **JavaScript Algorithms and Data Structures Certification (Beta)** from FreeCodeCamp.  
 Each project demonstrates skills in **JavaScript, algorithms, problem-solving, and data structures**.
